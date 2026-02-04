@@ -20,6 +20,9 @@ On startup, the C++ process retries the Redis connection until Redis is availabl
 
 Redis data is stored in a named Docker volume, so the visitor count survives container restarts. If you remove volumes (for example with `docker compose down -v`) the stored counter will be wiped.
 
+<img width="965" height="728" alt="NexusScreenshot" src="https://github.com/user-attachments/assets/a7de0640-4a23-4e83-bd3d-91fae5e0b8bc" />
+
+
 ### How to run
 
 You’ll need Docker and Docker Compose installed.
