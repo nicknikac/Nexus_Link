@@ -27,11 +27,10 @@ Redis data is stored in a named Docker volume, so the visitor count survives con
 ```mermaid
 flowchart LR
   B[Browser] --> N[Nginx]
-  N --> A[App containers (C++ server)]
+  N --> A[App containers]
   A --> R[Redis]
   A --> H[HTML dashboard]
   H --> B
-
 ```
 
 
