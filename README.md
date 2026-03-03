@@ -8,7 +8,7 @@ Even though the app logic is simple, it runs in a more “real” infrastructure
 
 The main challenge I wanted to explore was shared state across multiple instances. If you run two app containers, each one has its own memory, so a normal in-process counter won’t match between them. In this project the counter lives in Redis, so any instance can increment the same key and the visitor count stays global.
 
-### What’s in the stack
+### Stack
 
 The core server is C++ with manual socket handling and a hand-built HTTP response. Redis is used as a shared state layer for the counter (`visitor_count`). Nginx listens on port 80 and forwards traffic to the app service on port 5000. Docker and Docker Compose build the C++ binary, run the services, and provide networking plus a persistent Redis volume.
 
@@ -21,6 +21,17 @@ On startup, the C++ process retries the Redis connection until Redis is availabl
 Redis data is stored in a named Docker volume, so the visitor count survives container restarts. If you remove volumes (for example with `docker compose down -v`) the stored counter will be wiped.
 
 <img width="965" height="728" alt="NexusScreenshot" src="https://github.com/user-attachments/assets/a7de0640-4a23-4e83-bd3d-91fae5e0b8bc" />
+
+### How it works
+
+
+flowchart LR
+  B[Browser] --> N[Nginx :80]
+  N --> A[App container(s) :5000<br/>C++ server]
+  A <--> R[Redis<br/>visitor_count key]
+  A --> H[HTML dashboard<br/>(/ and /reset)]
+  H --> B
+
 
 
 ### How to run
