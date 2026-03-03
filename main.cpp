@@ -6,17 +6,30 @@
 #include <hiredis/hiredis.h>
 #include <chrono>
 #include <ctime>
+#include <cstdio>
 
 int main() {
     // Create a basic TCP server on port 5000
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd < 0) {
+        std::perror("socket");
+        return 1; // cannot accept connections without a listening socket
+    }
+
     struct sockaddr_in address;
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(5000);
 
-    bind(server_fd, (struct sockaddr *)&address, sizeof(address));
-    listen(server_fd, 10);
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        std::perror("bind"); // bind failed, prob because the port is already in use
+        return 1;
+    }
+
+    if (listen(server_fd, 10) < 0) {
+        std::perror("listen");
+        return 1;
+    }
 
     char hostname[1024];
     gethostname(hostname, 1024);
@@ -35,8 +48,19 @@ int main() {
     // Main request loop
     while (true) {
         int new_socket = accept(server_fd, NULL, NULL);
+        if (new_socket < 0) {
+            std::perror("accept");
+            continue; // keep the server running and wait for the next client
+        }
+
         char buffer[1024] = {0};
-        read(new_socket, buffer, 1024);
+        int bytes_read = read(new_socket, buffer, sizeof(buffer) - 1);
+        if (bytes_read <= 0) {
+            // client closed the connection or read failed, nothing to respond with
+            close(new_socket);
+            continue;
+        }
+        buffer[bytes_read] = '\0';
         std::string request(buffer);
 
         // If someone wipes redis state, clear the counter and bounce back to /
